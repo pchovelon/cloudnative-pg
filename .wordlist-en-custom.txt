@@ -140,6 +140,7 @@ EphemeralVolumeSource
 EphemeralVolumesSizeLimit
 EphemeralVolumesSizeLimitConfiguration
 ExternalCluster
+FQDN
 Fei
 Filesystem
 Fluentd
@@ -253,6 +254,7 @@ OperatorCapabilities
 OperatorGroup
 OperatorHub
 PDB
+PDBs
 PGAudit
 PGDATA
 PGDG
@@ -378,6 +380,8 @@ ServiceAccount
 ServiceAccount's
 ServiceAccountTemplate
 ServiceMonitor
+ServiceSpec
+ServiceTemplateSpec
 Silvela
 Slonik
 SnapshotOwnerReference
@@ -390,6 +394,7 @@ StorageClass
 StorageConfiguration
 Storages
 SuccessfullyExtracted
+SwitchReplicaClusterStatus
 SyncReplicaElectionConstraints
 SynchronizeReplicas
 SynchronizeReplicasConfiguration
@@ -415,6 +420,7 @@ TopologySpreadConstraints
 TypedLocalObjectReference
 UI
 UID
+URIs
 UTF
 Uncomment
 Unrealizable
@@ -629,6 +635,7 @@ dT
 danglingPVC
 dataChecksums
 databackupconfiguration
+datacenter
 datacenters
 datallowconn
 datistemplate
@@ -681,6 +688,7 @@ env
 envFrom
 ephemeralVolumeSource
 ephemeralVolumesSizeLimit
+eu
 excludePatterns
 executables
 expirations
@@ -1076,6 +1084,7 @@ serverSecretVersion
 serverTLS
 serverTLSSecret
 serviceAccountTemplate
+serviceTemplate
 serviceaccount
 sessionToken
 sha
@@ -1134,6 +1143,7 @@ superuserSecret
 superuserSecretVersion
 sv
 svc
+switchReplicaClusterStatus
 switchoverDelay
 switchovers
 syncReplicaElectionConstraint

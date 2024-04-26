@@ -49,6 +49,7 @@ import (
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/reconciler/hibernation"
 	instanceReconciler "github.com/cloudnative-pg/cloudnative-pg/pkg/reconciler/instance"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/reconciler/persistentvolumeclaim"
+	"github.com/cloudnative-pg/cloudnative-pg/pkg/reconciler/replicaclusterswitch"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/resources/instance"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/specs"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/utils"
@@ -304,6 +305,13 @@ func (r *ClusterReconciler) reconcile(ctx context.Context, cluster *apiv1.Cluste
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, registerPhaseErr
 	}
 
+	if res, err := replicaclusterswitch.Reconcile(ctx, r.Client, cluster, instancesStatus); res != nil || err != nil {
+		if res != nil {
+			return *res, nil
+		}
+		return ctrl.Result{}, err
+	}
+
 	// The instance list is sorted and will present the primary as the first
 	// element, followed by the replicas, the most updated coming first.
 	// Pods that are not responding will be at the end of the list. We use
@@ -416,7 +424,7 @@ func (r *ClusterReconciler) handleSwitchover(
 
 	// Update the target primary name from the Pods status.
 	// This means issuing a failover or switchover when needed.
-	selectedPrimary, err := r.updateTargetPrimaryFromPods(ctx, cluster, instancesStatus, resources)
+	selectedPrimary, err := r.reconcileTargetPrimaryFromPods(ctx, cluster, instancesStatus, resources)
 	if err != nil {
 		if errors.Is(err, ErrWaitingOnFailOverDelay) {
 			contextLogger.Info("Waiting for the failover delay to expire")
@@ -772,14 +780,20 @@ func (r *ClusterReconciler) handleRollingUpdate(
 	cluster *apiv1.Cluster,
 	instancesStatus postgres.PostgresqlStatusList,
 ) (ctrl.Result, error) {
-	contextLogger := log.FromContext(ctx)
+	contextLogger := log.FromContext(ctx).WithName("handle_rolling_update")
 
 	// If we need to roll out a restart of any instance, this is the right moment
 	done, err := r.rolloutRequiredInstances(ctx, cluster, &instancesStatus)
-	if err != nil {
+	switch {
+	case errors.Is(err, errLogShippingReplicaElected):
+		contextLogger.Warning(
+			"The primary needs to be restarted, but the chosen new primary is still " +
+				"not connected via streaming replication, waiting for 5 seconds",
+		)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+	case err != nil:
 		return ctrl.Result{}, err
-	}
-	if done {
+	case done:
 		// Rolling upgrade is in progress, let's avoid marking stuff as synchronized
 		return ctrl.Result{}, ErrNextLoop
 	}
