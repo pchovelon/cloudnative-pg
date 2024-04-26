@@ -37,6 +37,7 @@ type pgBenchRun struct {
 	jobName            string
 	clusterName        string
 	dbName             string
+	ttl                int32
 	nodeSelector       []string
 	pgBenchCommandArgs []string
 	dryRun             bool
@@ -59,7 +60,9 @@ var jobExample = `
 
   # Create a job with given values and clusterName "cluster-example"
   kubectl-cnpg pgbench cluster-example --db-name pgbenchDBName --job-name job-name -- \
-    --time 30 --client 1 --jobs 1`
+    --time 30 --client 1 --jobs 1
+  # Create a pgbench job with default values, clusterName "cluster-example" and a job's ttl of 60s
+  kubectl-cnpg pgbench cluster-example --ttl 60`
 
 func (cmd *pgBenchRun) execute(ctx context.Context) error {
 	cluster, err := cmd.getCluster(ctx)
@@ -136,6 +139,7 @@ func (cmd *pgBenchRun) buildJob(cluster *apiv1.Cluster) *batchv1.Job {
 			Labels:    labels,
 		},
 		Spec: batchv1.JobSpec{
+			TTLSecondsAfterFinished: &cmd.ttl,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,

@@ -48,6 +48,10 @@ var _ = Describe("NewCmd", func() {
 		nodeSelectorFlag := cmd.Flag("node-selector")
 		Expect(nodeSelectorFlag).ToNot(BeNil())
 		Expect(nodeSelectorFlag.DefValue).To(Equal("[]"))
+
+		ttlFlag := cmd.Flag("ttl")
+		Expect(dryTtlFlag).ToNot(BeNil())
+		Expect(dryTtlFlag.DefValue).To(Equal(86400))
 	})
 
 	It("should correctly parse flags and arguments", func() {
@@ -61,6 +65,7 @@ var _ = Describe("NewCmd", func() {
 			testRun.jobName, _ = cmd.Flags().GetString("job-name")
 			testRun.dbName, _ = cmd.Flags().GetString("db-name")
 			testRun.dryRun, _ = cmd.Flags().GetBool("dry-run")
+			testRun.ttl, _ = cmd.Flags().GetInt32("ttl")
 			testRun.nodeSelector, _ = cmd.Flags().GetStringSlice("node-selector")
 
 			testRun.clusterName = args[0]
@@ -73,6 +78,7 @@ var _ = Describe("NewCmd", func() {
 			"mycluster",
 			"--job-name=myjob",
 			"--db-name=mydb",
+			"--ttl=86400",
 			"--dry-run=true",
 			"--node-selector=label=value",
 			"arg1",
@@ -90,6 +96,7 @@ var _ = Describe("NewCmd", func() {
 		Expect(testRun.clusterName).To(Equal("mycluster"))
 		Expect(testRun.dbName).To(Equal("mydb"))
 		Expect(testRun.dryRun).To(BeTrue())
+		Expect(testRun.ttl).To(Equal(86400))
 		Expect(testRun.nodeSelector).To(Equal([]string{"label=value"}))
 		Expect(testRun.pgBenchCommandArgs).To(Equal([]string{"arg1", "arg2"}))
 	})

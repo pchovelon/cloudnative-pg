@@ -58,7 +58,7 @@ func NewCmd() *cobra.Command {
 		&run.dbName,
 		"db-name",
 		"app",
-		"The name of the database that will be used by pgbench. Defaults to: app",
+		"The name of the database that will be used by pgbench",
 	)
 
 	pgBenchCmd.Flags().BoolVar(
@@ -66,6 +66,13 @@ func NewCmd() *cobra.Command {
 		"dry-run",
 		false,
 		"When true prints the job manifest instead of creating it",
+	)
+
+	pgBenchCmd.Flags().Int32Var(
+		&run.ttl,
+		"ttl",
+		86400,
+		"The time, in seconds, after which the job will be cleaned from the Kubernetes cluster",
 	)
 
 	pgBenchCmd.Flags().StringSliceVar(
