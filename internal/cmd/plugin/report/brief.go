@@ -22,17 +22,21 @@ import (
 	"github.com/cloudnative-pg/cloudnative-pg/internal/cmd/plugin"
 )
 
-// NewCmd creates the new "report" command
-func NewCmd() *cobra.Command {
-	reportCmd := &cobra.Command{
-		Use:     "report operator/cluster",
-		Short:   "Report on the operator or a cluster for troubleshooting",
-		GroupID: plugin.GroupIDTroubleshooting,
+func briefCmd() *cobra.Command {
+	var (
+		file, output string
+	)
+
+	const filePlaceholder = "report_brief_<name>_<timestamp>.zip"
+	cmd := &cobra.Command{
+		Use:   "brief",
+		Short: "Brief report of clusters resources and operator",
+		Long:  "Collects combined informations on PostgreSQL and CloudNativePG operator ",
+		Args:  plugin.RequiresArguments(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return brief(cmd.Context(), plugin.OutputFormat(output), file)
+		},
 	}
 
-	reportCmd.AddCommand(operatorCmd())
-	reportCmd.AddCommand(clusterCmd())
-	reportCmd.AddCommand(briefCmd())
-
-	return reportCmd
+	return cmd
 }
