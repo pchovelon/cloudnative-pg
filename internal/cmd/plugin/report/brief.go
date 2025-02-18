@@ -29,7 +29,7 @@ func briefCmd() *cobra.Command {
 
 	const filePlaceholder = "report_brief_<name>_<timestamp>.zip"
 	cmd := &cobra.Command{
-		Use:   "brief",
+		Use:   "brief [CLUSTER]",
 		Short: "Brief report of clusters resources and operator",
 		Long:  "Collects combined informations on PostgreSQL and CloudNativePG operator ",
 		Args:  plugin.RequiresArguments(0),
@@ -40,3 +40,5 @@ func briefCmd() *cobra.Command {
 
 	return cmd
 }
+
+//return briefCluster(cmd.Context(), plugin.OutputFormat(output), file, clusterName)

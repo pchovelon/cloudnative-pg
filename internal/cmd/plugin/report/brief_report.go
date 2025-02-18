@@ -19,9 +19,12 @@ package report
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/cheynewallace/tabby"
 	cnpgv1 "github.com/cloudnative-pg/cloudnative-pg/api/v1"
 	"github.com/cloudnative-pg/cloudnative-pg/internal/cmd/plugin"
+	"github.com/logrusorgru/aurora/v4"
 )
 
 // clusterReport contains the data to be printed by the `report cluster` plugin
@@ -29,33 +32,66 @@ type briefReport struct {
 	clusterList cnpgv1.ClusterList
 }
 
-// cluster implements the "brief cluster" subcommand
-// Produces a zip file containing
-//   - cluster resources and specifications
+// brief implements the "brief" command
+// Produces an output containing
+//   - all clusters resources and their specifications
+
 func brief(ctx context.Context, format plugin.OutputFormat, file string) error {
 
+	fmt.Println(aurora.Green("Brief Report"))
+	fmt.Println()
+
+	fmt.Println(aurora.Green("Clusters Summary"))
+
+	clustersSummary := tabby.New()
+
+	clustersSummary.AddHeader(
+		"PostgreSQL cluster",
+		"Namespace",
+		"Image",
+		"Status",
+		"Instances")
+
 	var clusters cnpgv1.ClusterList
-
 	err := plugin.Client.List(ctx, &clusters)
-
 	if err != nil {
 		return fmt.Errorf("could not get clusters: %w", err)
 	}
-
 	for _, cluster := range clusters.Items {
-		fmt.Println("PostgreSQL cluster : " + cluster.Name)
-		fmt.Println("Namespace : " + cluster.Namespace)
-		fmt.Println("Image : " + cluster.Spec.ImageName)
-		fmt.Println("Instance(s) :")
-		for _, instance := range cluster.Status.InstanceNames {
-			fmt.Println("  " + instance)
-		}
-		fmt.Println("Configuration :")
-		for _, parameter := range cluster.Spec.PostgresConfiguration.Parameters {
-			fmt.Println("  " + parameter
-		}
+		clustersSummary.AddLine(cluster.Name, cluster.Namespace, cluster.Spec.ImageName, cluster.Status.Phase, strings.Join(cluster.Status.InstanceNames, ","))
+		clustersSummary.Print()
 
+		fmt.Println()
+		for parameter, value := range cluster.Spec.PostgresConfiguration.Parameters {
+			fmt.Println(parameter + " : " + value)
+		}
 	}
+
+	fmt.Println()
+	fmt.Println(aurora.Green("Operators Summary"))
+	fmt.Println()
+
+	operatorsSummary := tabby.New()
+
+	operatorsSummary.AddHeader(
+		"Operator name",
+		"Namespace",
+		"Image",
+		"Status")
 
 	return nil
 }
+
+// // briefCluster implements the "brief cluster" subcommand
+// // Produces an output containing
+// //   - one cluster resource and its informations
+
+// func briefCluster(ctx context.Context, format plugin.OutputFormat, file string, cluster string) error {
+
+// 	// fmt.Println("Configuration :")
+// 	// for parameter, value := range cluster.Spec.PostgresConfiguration.Parameters {
+// 	// 	fmt.Println(" " + parameter + " : " + value)
+// 	// }
+
+// 	return nil
+// }
